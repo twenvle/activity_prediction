@@ -1,0 +1,76 @@
+# パスは project_root を基準に解決されます。
+project_root: ".."
+
+# 使用するモデル: xgboost / svr / random_forest / ridge
+model_name: ridge
+input_path: data/processed/df_features_v6.csv
+target_column: pka_value
+output_root: out/model_results
+
+# Nested CVと再現性の設定
+n_splits: 5
+inner_splits: 5
+random_state: 42
+encoding: utf-8-sig
+
+# 探索しない固定設定。GridSearchCV自体が並列実行するため、
+# XGBoostとRandom Forestの内部並列数は1にしています。
+model_parameters:
+  xgboost:
+    objective: "reg:squarederror"
+    n_jobs: 1
+
+  svr:
+    kernel: rbf
+
+  random_forest:
+    n_jobs: 1
+
+  ridge:
+    solver: auto
+
+# 各外側foldの学習データ内で、内側CVが探索する候補です。
+# model_nameで選択したモデルのグリッドだけが使用されます。
+hyperparameter_grid:
+  xgboost:
+    n_estimators: [200, 400, 600, 800]
+    learning_rate: [0.01, 0.03, 0.05, 0.1]
+    max_depth: [2, 3, 4, 5, 6]
+    min_child_weight: [1, 3, 5, 10]
+    subsample: [0.7, 0.85, 1.0]
+    colsample_bytree: [0.7, 0.85, 1.0]
+    reg_alpha: [0.0, 0.01, 0.1, 1.0]
+    reg_lambda: [0.1, 1.0, 5.0, 10.0]
+
+  svr:
+    C: [0.1, 1.0, 10.0, 100.0, 1000.0]
+    gamma: [scale, auto, 0.001, 0.01, 0.1, 1.0]
+    epsilon: [0.01, 0.05, 0.1, 0.2, 0.5]
+
+  random_forest:
+    n_estimators: [200, 500, 800]
+    max_depth: [null, 5, 10, 20]
+    max_features: [sqrt, 0.5, 1.0]
+    min_samples_split: [2, 5, 10]
+    min_samples_leaf: [1, 2, 4]
+    bootstrap: [true, false]
+
+  ridge:
+    alpha:
+      - 0.0001
+      - 0.0003
+      - 0.001
+      - 0.003
+      - 0.01
+      - 0.03
+      - 0.1
+      - 0.3
+      - 1.0
+      - 3.0
+      - 10.0
+      - 30.0
+      - 100.0
+      - 300.0
+      - 1000.0
+      - 3000.0
+      - 10000.0
